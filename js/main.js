@@ -15,6 +15,13 @@ const svg = d3.select("#chart-area").append("svg")
 const g = svg.append("g")
  	.attr("transform", `translate(${MARGIN.LEFT}, ${MARGIN.TOP})`)
 
+// create a tooltip
+var tooltip = d3.select("#chart-area")
+  .append("div")
+    .style("position", "absolute")
+    .style("visibility", "hidden")
+    .text("I'm a circle!");	
+
 // X label
 g.append("text")
  .attr("class", "x axis-label")
@@ -50,6 +57,9 @@ const yAxisGroup = g.append("g")
  .attr("class", "y axis")
 
  const xAxisCall = d3.axisBottom(x)
+	// setting custom x axis tick values
+	.tickValues([0,400,4000,40000])
+
  xAxisGroup.call(xAxisCall)
 	 .selectAll("text")
 	  .attr("cy", "10")
@@ -81,7 +91,7 @@ d3.json("data/data.json").then(function(data){
 		// for each year, update by passing in all the country objects
 		update(dataPerYear)
 
- 	}, 10000)
+ 	}, 1000)
 	// the initial call to load the data
 	// console.log(data[year]["countries"])
 	update(data[year]["countries"])
@@ -134,7 +144,10 @@ function update(data) {
       	.attr("cy", d => y(d["life_exp"]))
 
   	d3.select("#circleBasicTooltip")
-		.on("mouseover", function() { console.log("MOUSEOER"); return tooltip.style("visibility", "visible");}  )
+		.on("mouseover", function() { 
+			console.log("MOUSEOER"); 
+			return tooltip.style("visibility", "visible");
+			})
 		.on("mousemove", function(){return tooltip.style("top", (event.pageY-800)+"px").style("left",(event.pageX-800)+"px");})
 		.on("mouseout", function(){return tooltip.style("visibility", "hidden");});
 }
