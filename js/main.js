@@ -15,14 +15,6 @@ const svg = d3.select("#chart-area").append("svg")
 const g = svg.append("g")
  	.attr("transform", `translate(${MARGIN.LEFT}, ${MARGIN.TOP})`)
 
-
-// create a tooltip
-var tooltip = d3.select("#chart-area")
-.append("div")
-  .style("position", "absolute")
-  .style("visibility", "hidden")
-  .text("I'm a circle!");	
-
 // Year label on x axis
 const yearText = g.append("text")
 	.attr("x", WIDTH - MARGIN.LEFT)
@@ -64,9 +56,6 @@ const area = d3.scaleLinear()
 	.domain([2000, 1400000000])
 
 const continentColor = d3.scaleOrdinal(d3.schemePastel1)
-
-
-
 
 // x axis
 const xAxisGroup = g.append("g")
@@ -113,7 +102,7 @@ d3.json("data/data.json").then(function(data){
 		// for each year, update by passing in all the country objects
 		update(dataPerYear)
 
- 	}, 1000)
+ 	}, 100)
 	// the initial call to load the data
 	// console.log(data[year]["countries"])
 	update(data[year])
@@ -121,10 +110,10 @@ d3.json("data/data.json").then(function(data){
 
 function update(data) {
 	const t = d3.transition().duration(100);
+	// updating the year text on x axis
 	yearText.text(data["year"])
+	// reaching into data object to get countries list
 	data = data["countries"]
-	// ______________________________________________________
-	// binding data to svg elements (circles) for each country 
 
 	// JOIN new data with old elements
 	const circles = g.selectAll("circle")
@@ -139,28 +128,26 @@ function update(data) {
   	// ENTER new elements present in new data...
   	circles.enter().append("circle")
 		.each(function(d,i) {
+			// removing elements with null values
 			if(d["life_exp"] == null || d["income"] == null) {
 				d3.select(this.remove())
 			}
 		})
+		// color encoded by country
 		.attr("fill", d => continentColor(d["continent"]))
     	// AND UPDATE old elements present in new data.
     	.merge(circles)
     	.transition(t)
       		.attr("cx", d => {
-					if(d["income"]) {
+					if(d["income"] != null && d["income"] != 0) {
 						return x(d["income"])
 					}
 				})
-      		.attr("cy", d => y(d["life_exp"]))
-			.attr("r", d => Math.sqrt(area(d.population) / Math.PI))
-
-
-  	d3.select("#circleBasicTooltip")
-		.on("mouseover", function() { 
-			console.log("MOUSEOER"); 
-			return tooltip.style("visibility", "visible");
+      		.attr("cy", d => {
+					if(d["life_exp"] != null && d["life_exp"] != 0) {
+						return y(d["life_exp"])
+					}
 			})
-		.on("mousemove", function(){return tooltip.style("top", (event.pageY-800)+"px").style("left",(event.pageX-800)+"px");})
-		.on("mouseout", function(){return tooltip.style("visibility", "hidden");});
+
+			.attr("r", d => Math.sqrt(area(d.population) / Math.PI))
 }
