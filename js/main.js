@@ -15,18 +15,20 @@ const svg = d3.select("#chart-area").append("svg")
 const g = svg.append("g")
  	.attr("transform", `translate(${MARGIN.LEFT}, ${MARGIN.TOP})`)
 
+
+// create a tooltip
+var tooltip = d3.select("#chart-area")
+.append("div")
+  .style("position", "absolute")
+  .style("visibility", "hidden")
+  .text("I'm a circle!");	
+
+// Year label on x axis
 const yearText = g.append("text")
 	.attr("x", WIDTH - MARGIN.LEFT)
 	.attr("y", HEIGHT)
 	.attr("font-size", "32px")
 	.text("");
-
-// create a tooltip
-var tooltip = d3.select("#chart-area")
-  .append("div")
-    .style("position", "absolute")
-    .style("visibility", "hidden")
-    .text("I'm a circle!");	
 
 // X label
 g.append("text")
@@ -47,14 +49,15 @@ const yLabel = g.append("text")
  .attr("transform", "rotate(-90)")
  .text("Life Expectancy")
 
-// defaults to base 10
+
+// axis, area, and color scaling
 const x = d3.scaleLog()
 	.range([0, WIDTH])
 	.domain([142, 150000])
 
 const y = d3.scaleLinear()
-	.domain([0, 90])
 	.range([HEIGHT, 0])
+	.domain([0, 90])
 
 const area = d3.scaleLinear()
 	.range([25*Math.PI, 1500*Math.PI])
@@ -63,16 +66,21 @@ const area = d3.scaleLinear()
 const continentColor = d3.scaleOrdinal(d3.schemePastel1)
 
 
+
+
+// x axis
 const xAxisGroup = g.append("g")
  .attr("class", "x axis")
  .attr("transform", `translate(0, ${HEIGHT})`)
 
+// y axis
 const yAxisGroup = g.append("g")
  .attr("class", "y axis")
 
  const xAxisCall = d3.axisBottom(x)
 	// setting custom x axis tick values
-	.tickValues([0,400,4000,40000])
+	.tickValues([400,4000,40000])
+	.tickFormat(d3.format("$"));
 
  xAxisGroup.call(xAxisCall)
 	 .selectAll("text")
@@ -139,7 +147,11 @@ function update(data) {
     	// AND UPDATE old elements present in new data.
     	.merge(circles)
     	.transition(t)
-      		.attr("cx", d => x(d["income"]))
+      		.attr("cx", d => {
+					if(d["income"]) {
+						return x(d["income"])
+					}
+				})
       		.attr("cy", d => y(d["life_exp"]))
 			.attr("r", d => Math.sqrt(area(d.population) / Math.PI))
 
