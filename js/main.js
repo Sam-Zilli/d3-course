@@ -47,13 +47,21 @@ const yLabel = g.append("text")
  .attr("transform", "rotate(-90)")
  .text("Life Expectancy")
 
-const x = d3.scaleLinear()
-	.domain([0,40000])
-  	.range([0, WIDTH])
+// defaults to base 10
+const x = d3.scaleLog()
+	.range([0, WIDTH])
+	.domain([142, 150000])
 
 const y = d3.scaleLinear()
 	.domain([0, 90])
 	.range([HEIGHT, 0])
+
+const area = d3.scaleLinear()
+	.range([25*Math.PI, 1500*Math.PI])
+	.domain([2000, 1400000000])
+
+const continentColor = d3.scaleOrdinal(d3.schemePastel1)
+
 
 const xAxisGroup = g.append("g")
  .attr("class", "x axis")
@@ -104,7 +112,7 @@ d3.json("data/data.json").then(function(data){
 })
 
 function update(data) {
-	const t = d3.transition().duration(750);
+	const t = d3.transition().duration(100);
 	yearText.text(data["year"])
 	data = data["countries"]
 	// ______________________________________________________
@@ -118,9 +126,6 @@ function update(data) {
 
     // EXIT old elements not present in new data.
    	circles.exit()
-    	.attr("fill", "red")
-		.transition(t)
-      	.attr("cy", y(0))
      	.remove()
 
   	// ENTER new elements present in new data...
@@ -130,26 +135,13 @@ function update(data) {
 				d3.select(this.remove())
 			}
 		})
-		.attr("id", "circleBasicTooltip")
-    	.attr("fill", (element) => {
-			if (element["continent"] === "asia") {
-				return "yellow"
-			}
-			// should be no red circles if null values eliminated correctly
-			if (element["income" == null] || element["life_exp"] == null) {
-				return "red"
-			}
-			else {
-				return "black"
-			}
-		})
-    	// .attr("cy", (d) => y(d["life_exp"]))
-    	.attr("r", 5)
+		.attr("fill", d => continentColor(d["continent"]))
     	// AND UPDATE old elements present in new data.
     	.merge(circles)
     	.transition(t)
-      	.attr("cx", d => x(d["income"]) ** 2)
-      	.attr("cy", d => y(d["life_exp"]))
+      		.attr("cx", d => x(d["income"]))
+      		.attr("cy", d => y(d["life_exp"]))
+			.attr("r", d => Math.sqrt(area(d.population) / Math.PI))
 
   	d3.select("#circleBasicTooltip")
 		.on("mouseover", function() { 
