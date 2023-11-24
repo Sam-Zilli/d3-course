@@ -143,6 +143,7 @@ function update(data) {
       		.attr("cy", d => y(d["life_exp"]))
 			.attr("r", d => Math.sqrt(area(d.population) / Math.PI))
 
+
   	d3.select("#circleBasicTooltip")
 		.on("mouseover", function() { 
 			console.log("MOUSEOER"); 
