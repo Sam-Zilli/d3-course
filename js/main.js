@@ -34,20 +34,13 @@ const yLabel = g.append("text")
  .attr("transform", "rotate(-90)")
  .text("Life Expectancy")
 
-// const x = d3.scaleBand()
-//  .range([0, WIDTH])
-//  .paddingInner(0.3)
-//  .paddingOuter(0.2)
-
-// x axis will be logarithmic, default base 10
-const x = d3.scaleLog()
-	.domain([0, 40000]) // adjust this after testing
-	.range([0,40000]) // the range of tick marks displayed
+const x = d3.scaleBand()
+  .range([0, WIDTH])
+  .paddingInner(0.3)
+  .paddingOuter(0.2)
 
 const y = d3.scaleLinear()
-	// ages range from 0 to 90 years old
-	.domain( [0, 90] )
-	// reversing the range, height is the minimum value
+	.domain([0, 90])
 	.range([HEIGHT, 0])
 
 const xAxisGroup = g.append("g")
@@ -64,7 +57,6 @@ const yAxisGroup = g.append("g")
 	  .attr("cx", "-5")
 	  .attr("text-anchor", "end")
 	  .attr("transform", "rotate(-40)")
-
 
   const yAxisCall = d3.axisLeft(y)
 		.ticks(10)
@@ -85,18 +77,11 @@ d3.json("data/data.json").then(function(data){
 		// data has an object for each year, inside that year
 		// another object for each country
 		const dataPerYear = data[year]["countries"]
+		console.log("updated " + data[year]["year"])
 		// for each year, update by passing in all the country objects
 		update(dataPerYear)
 
- 	}, 100000)
-	// console.log(data[year])
-	// console.log("______")
-	// console.log(data[year].countries)
-
-
-	// dataPerYear.map( (d) => console.log(d["continent"]) )
-	// console.log(dataPerYear)
-
+ 	}, 1000)
 	// the initial call to load the data
 	// console.log(data[year]["countries"])
 	update(data[year]["countries"])
@@ -104,48 +89,39 @@ d3.json("data/data.json").then(function(data){
 
 function update(data) {
 	const t = d3.transition().duration(750);
-	data.map ( (d) =>
-		console.log(d["country"] + " " + d["income"])
-		)
+	// ______________________________________________________
+	// binding data to svg elements (circles) for each country 
 
-	// data.map( (element) => {
-	// 	if(element["continent"] == "asia") {
-	// 		console.log(element["income"])
-	// 	}
-	// })
-		  
+	// JOIN new data with old elements
+	const circles = g.selectAll("circle")
+    	.data(data, (d) => d["country"])	
 
-	// let jsonVersion = JSON.stringify(data)
-	// console.log(jsonVersion) 
-	// data.map( (d) => d.map( (c) => console.log(c.income)))
+    // EXIT old elements not present in new data.
+   	circles.exit()
+    	.attr("fill", "red")
+		.transition(t)
+      	.attr("cy", y(0))
+     	.remove()
 
- 
- 	// x.domain(data.map(d => d["country"]))
+  	// ENTER new elements present in new data...
+  	circles.enter().append("circle")
+    	.attr("fill", (element) => {
+			if (element["continent"] === "asia") {
+				return "red"
+			}
+			else {
+				return "black"
+			}
+		})
+    	.attr("cy", y(0))
+    	.attr("r", 5)
+    	// AND UPDATE old elements present in new data.
+    	.merge(circles)
+    	.transition(t)
+      	.attr("cx", (d) => {
+			d["income"]?  x(d["income"])+ (x.bandwidth() / 2) : 70;
+			})
+      	.attr("cy", d => y(d["life_exp"]))
 
 
-
- // JOIN new data with old elements. For each country, make a circle
-// 	const circles = g.selectAll("circle")
-//     	.data(data, (d) => d["country"]) 
-
-//  // EXIT old elements not present in new data.
-// //  circles.exit()
-// //    .attr("fill", "red")
-// //    .transition(t)
-// //      .attr("height", 0)
-// //      .attr("cy", y(0))
-// //      .remove()
-
-
-// //  // ENTER new elements present in new data...
-// //  circles.enter().append("circle")
-// //    .attr("fill", "grey")
-// //    .attr("cy", y(0))
-// //    .attr("height", 0)
-// //    // AND UPDATE old elements present in new data.
-// //    .merge(circles)
-// //    .transition(t)
-// //      .attr("cx", (d) => x(Number(d["income"])))
-// //      .attr("cy", d => y(Number(d["life_exp"])))
-// // 	 .attr("r", x.bandwidth)
 }
