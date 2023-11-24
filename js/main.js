@@ -2,17 +2,15 @@ const MARGIN = { LEFT: 100, RIGHT: 10, TOP: 10, BOTTOM: 100 }
 const WIDTH = 600 - MARGIN.LEFT - MARGIN.RIGHT
 const HEIGHT = 400 - MARGIN.TOP - MARGIN.BOTTOM
 
-
+// increments based on what year is retrieved from dataset
 let year = 0
 
 const svg = d3.select("#chart-area").append("svg")
  .attr("width", WIDTH + MARGIN.LEFT + MARGIN.RIGHT)
  .attr("height", HEIGHT + MARGIN.TOP + MARGIN.BOTTOM)
 
-
 const g = svg.append("g")
  .attr("transform", `translate(${MARGIN.LEFT}, ${MARGIN.TOP})`)
-
 
 // X label
 g.append("text")
@@ -21,8 +19,7 @@ g.append("text")
  .attr("y", HEIGHT + 60)
  .attr("font-size", "20px")
  .attr("text-anchor", "middle")
- .text("Month")
-
+ .text("GDP Per Capita ($)")
 
 // Y label
 const yLabel = g.append("text")
@@ -33,7 +30,6 @@ const yLabel = g.append("text")
  .attr("text-anchor", "middle")
  .attr("transform", "rotate(-90)")
  .text("Life Expectancy")
-
 
 // const x = d3.scaleBand()
 //  .range([0, WIDTH])
@@ -48,14 +44,12 @@ const x = d3.scaleLog()
 const y = d3.scaleLinear()
  .range([HEIGHT, 0])
 
-
 const xAxisGroup = g.append("g")
  .attr("class", "x axis")
  .attr("transform", `translate(0, ${HEIGHT})`)
 
 const yAxisGroup = g.append("g")
  .attr("class", "y axis")
- 
 
 d3.json("data/data.json").then(function(data){
  	d3.interval(() => {
@@ -67,63 +61,78 @@ d3.json("data/data.json").then(function(data){
 		else {
 			year = 0;
 		}
-   		const newData = data[year]
-   		update(newData)
- 	}, 1000000)
+		const dataPerYear = data[year]["countries"]
+		update(dataPerYear)
+
+ 	}, 1000)
+	// console.log(data[year])
+	// console.log("______")
+	// console.log(data[year].countries)
+
+
+	// dataPerYear.map( (d) => console.log(d["continent"]) )
+	// console.log(dataPerYear)
+
+	// the initial call to load the data
 	update(data)
 })
 
-
-
-
 function update(data) {
-	const t = d3.transition().duration(750)	
+	const t = d3.transition().duration(750);
+
+	// data.map( (element) => {
+	// 	if(element["continent"] == "asia") {
+	// 		console.log(element["income"])
+	// 	}
+	// })
+		  
+
 	// let jsonVersion = JSON.stringify(data)
 	// console.log(jsonVersion) 
 	// data.map( (d) => d.map( (c) => console.log(c.income)))
 
  
-//  x.domain(data.map(d => d[country]))
-//  y.domain([0, d3.max(data, d => d[year].life_exp)])
+ x.domain(data.map(d => d["country"]))
+ y.domain( [0, 90] )
 
 
-//  const xAxisCall = d3.axisBottom(x)
-//  xAxisGroup.transition(t).call(xAxisCall)
-//    .selectAll("text")
-//      .attr("cy", "10")
-//      .attr("cx", "-5")
-//      .attr("text-anchor", "end")
-//      .attr("transform", "rotate(-40)")
+ const xAxisCall = d3.axisBottom(x)
+ xAxisGroup.transition(t).call(xAxisCall)
+   .selectAll("text")
+     .attr("cy", "10")
+     .attr("cx", "-5")
+     .attr("text-anchor", "end")
+     .attr("transform", "rotate(-40)")
 
 
-//  const yAxisCall = d3.axisLeft(y)
-//    .ticks(3)
-//    .tickFormat(d => d + "m")
-//  yAxisGroup.transition(t).call(yAxisCall)
+ const yAxisCall = d3.axisLeft(y)
+   .ticks(10)
+   .tickFormat(d => d + " years")
+   yAxisGroup.transition(t).call(yAxisCall)
 
 
-//  // JOIN new data with old elements.
-//  const circles = g.selectAll("circle")
-//    .data(data, d => d.country) 
+ // JOIN new data with old elements.
+ const circles = g.selectAll("circle")
+   .data(data, d => d["country"]) 
 
-//  // EXIT old elements not present in new data.
-//  circles.exit()
-//    .attr("fill", "red")
-//    .transition(t)
-//      .attr("height", 0)
-//      .attr("cy", y(0))
-//      .remove()
+ // EXIT old elements not present in new data.
+ circles.exit()
+   .attr("fill", "red")
+   .transition(t)
+     .attr("height", 0)
+     .attr("cy", y(0))
+     .remove()
 
 
-//  // ENTER new elements present in new data...
-//  circles.enter().append("circle")
-//    .attr("fill", "grey")
-//    .attr("cy", y(0))
-//    .attr("height", 0)
-//    // AND UPDATE old elements present in new data.
-//    .merge(circles)
-//    .transition(t)
-//      .attr("cx", (d) => x(d.income))
-//      .attr("cy", d => y(d[value]))
-// 	 .attr("r", x.bandwidth)
+ // ENTER new elements present in new data...
+ circles.enter().append("circle")
+   .attr("fill", "grey")
+   .attr("cy", y(0))
+   .attr("height", 0)
+   // AND UPDATE old elements present in new data.
+   .merge(circles)
+   .transition(t)
+     .attr("cx", (d) => x(d["income"]))
+     .attr("cy", d => y(d["life_exp"]))
+	 .attr("r", x.bandwidth)
 }
