@@ -15,6 +15,12 @@ const svg = d3.select("#chart-area").append("svg")
 const g = svg.append("g")
  	.attr("transform", `translate(${MARGIN.LEFT}, ${MARGIN.TOP})`)
 
+const yearText = g.append("text")
+	.attr("x", WIDTH - MARGIN.LEFT)
+	.attr("y", HEIGHT)
+	.attr("font-size", "32px")
+	.text("");
+
 // create a tooltip
 var tooltip = d3.select("#chart-area")
   .append("div")
@@ -86,7 +92,7 @@ d3.json("data/data.json").then(function(data){
 		}
 		// data has an object for each year, inside that year
 		// another object for each country
-		const dataPerYear = data[year]["countries"]
+		const dataPerYear = data[year]
 		// console.log("updated " + data[year]["year"])
 		// for each year, update by passing in all the country objects
 		update(dataPerYear)
@@ -94,11 +100,13 @@ d3.json("data/data.json").then(function(data){
  	}, 1000)
 	// the initial call to load the data
 	// console.log(data[year]["countries"])
-	update(data[year]["countries"])
+	update(data[year])
 })
 
 function update(data) {
 	const t = d3.transition().duration(750);
+	yearText.text(data["year"])
+	data = data["countries"]
 	// ______________________________________________________
 	// binding data to svg elements (circles) for each country 
 
