@@ -34,10 +34,10 @@ const yLabel = g.append("text")
  .attr("transform", "rotate(-90)")
  .text("Life Expectancy")
 
+
 const x = d3.scaleBand()
-  .range([0, WIDTH])
-  .paddingInner(0.3)
-  .paddingOuter(0.2)
+	.domain([0,40000])
+  	.range([0, WIDTH])
 
 const y = d3.scaleLinear()
 	.domain([0, 90])
@@ -77,7 +77,7 @@ d3.json("data/data.json").then(function(data){
 		// data has an object for each year, inside that year
 		// another object for each country
 		const dataPerYear = data[year]["countries"]
-		console.log("updated " + data[year]["year"])
+		// console.log("updated " + data[year]["year"])
 		// for each year, update by passing in all the country objects
 		update(dataPerYear)
 
@@ -94,7 +94,15 @@ function update(data) {
 
 	// JOIN new data with old elements
 	const circles = g.selectAll("circle")
-    	.data(data, (d) => d["country"])	
+    	.data(data, (d) => {
+			if(d["income"]) {
+				console.log("income is: " + d["income"])
+				return d["country"]
+			}	
+			else {
+				console.log("Found one wihtout income")
+			}
+		})
 
     // EXIT old elements not present in new data.
    	circles.exit()
@@ -105,8 +113,18 @@ function update(data) {
 
   	// ENTER new elements present in new data...
   	circles.enter().append("circle")
+		// removing any elements with null income values
+		.each(function(d,i) {
+			if(d["income"] == null) {
+				d3.select(this).remove()
+			}
+		})
     	.attr("fill", (element) => {
 			if (element["continent"] === "asia") {
+				return "yellow"
+			}
+			// should be no red circles if null values eliminated correctly
+			if (element["income" == null]) {
 				return "red"
 			}
 			else {
