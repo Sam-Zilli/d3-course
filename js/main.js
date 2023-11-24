@@ -11,9 +11,9 @@ const svg = d3.select("#chart-area").append("svg")
  .attr("width", WIDTH + MARGIN.LEFT + MARGIN.RIGHT)
  .attr("height", HEIGHT + MARGIN.TOP + MARGIN.BOTTOM)
 
-// adding internal element inside margin sizes for graph
+// adding internal element inside margin sizes for graph, g is "group" in svg
 const g = svg.append("g")
- .attr("transform", `translate(${MARGIN.LEFT}, ${MARGIN.TOP})`)
+ 	.attr("transform", `translate(${MARGIN.LEFT}, ${MARGIN.TOP})`)
 
 // X label
 g.append("text")
@@ -34,8 +34,7 @@ const yLabel = g.append("text")
  .attr("transform", "rotate(-90)")
  .text("Life Expectancy")
 
-
-const x = d3.scaleBand()
+const x = d3.scaleLinear()
 	.domain([0,40000])
   	.range([0, WIDTH])
 
@@ -62,6 +61,7 @@ const yAxisGroup = g.append("g")
 		.ticks(10)
 		.tickFormat(d => d + " years")
    yAxisGroup.call(yAxisCall)
+   
 
 // data retrieval and binding from json
 d3.json("data/data.json").then(function(data){
@@ -81,7 +81,7 @@ d3.json("data/data.json").then(function(data){
 		// for each year, update by passing in all the country objects
 		update(dataPerYear)
 
- 	}, 1000)
+ 	}, 10000)
 	// the initial call to load the data
 	// console.log(data[year]["countries"])
 	update(data[year]["countries"])
@@ -95,13 +95,7 @@ function update(data) {
 	// JOIN new data with old elements
 	const circles = g.selectAll("circle")
     	.data(data, (d) => {
-			if(d["income"]) {
-				console.log("income is: " + d["income"])
-				return d["country"]
-			}	
-			else {
-				console.log("Found one wihtout income")
-			}
+			return d["country"]
 		})
 
     // EXIT old elements not present in new data.
@@ -113,33 +107,34 @@ function update(data) {
 
   	// ENTER new elements present in new data...
   	circles.enter().append("circle")
-		// removing any elements with null income values
 		.each(function(d,i) {
-			if(d["income"] == null) {
-				d3.select(this).remove()
+			if(d["life_exp"] == null || d["income"] == null) {
+				d3.select(this.remove())
 			}
 		})
+		.attr("id", "circleBasicTooltip")
     	.attr("fill", (element) => {
 			if (element["continent"] === "asia") {
 				return "yellow"
 			}
 			// should be no red circles if null values eliminated correctly
-			if (element["income" == null]) {
+			if (element["income" == null] || element["life_exp"] == null) {
 				return "red"
 			}
 			else {
 				return "black"
 			}
 		})
-    	.attr("cy", y(0))
+    	// .attr("cy", (d) => y(d["life_exp"]))
     	.attr("r", 5)
     	// AND UPDATE old elements present in new data.
     	.merge(circles)
     	.transition(t)
-      	.attr("cx", (d) => {
-			d["income"]?  x(d["income"])+ (x.bandwidth() / 2) : 70;
-			})
+      	.attr("cx", d => x(d["income"]) ** 2)
       	.attr("cy", d => y(d["life_exp"]))
 
-
+  	d3.select("#circleBasicTooltip")
+		.on("mouseover", function() { console.log("MOUSEOER"); return tooltip.style("visibility", "visible");}  )
+		.on("mousemove", function(){return tooltip.style("top", (event.pageY-800)+"px").style("left",(event.pageX-800)+"px");})
+		.on("mouseout", function(){return tooltip.style("visibility", "hidden");});
 }
