@@ -71,7 +71,7 @@ const area = d3.scaleLinear()
 	.range([25*Math.PI, 1500*Math.PI])
 	.domain([2000, 1400000000])
 
-const continentColor = d3.scaleOrdinal(d3.schemePastel1)
+const continentColor = d3.scaleOrdinal().range(["blue", "green", "grey", "darkgreen", "pink", "brown", "slateblue", "grey1", "orange"])
 
 // x axis
 const xAxisGroup = g.append("g")
