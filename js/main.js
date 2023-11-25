@@ -86,6 +86,16 @@ const yAxisGroup = g.append("g")
 
 // data retrieval and binding from json
 d3.json("data/data.json").then(function(data){
+	const formattedData = data.map(year => {
+		return year["countries"].filter(country => {
+			const dataExists = (country.income && country.life_exp)
+			return dataExists
+		}).map(country => {
+			country.income = Number(country.income)
+			country.life_exp = Number(country.life_exp)
+			return country
+		})
+	})
  	d3.interval(() => {
 		// iterating through each of the objects in the data (each is a year)
 		if(year < 214) {
@@ -97,23 +107,25 @@ d3.json("data/data.json").then(function(data){
 		}
 		// data has an object for each year, inside that year
 		// another object for each country
-		const dataPerYear = data[year]
+		const dataPerYear = formattedData[year]
 		// console.log("updated " + data[year]["year"])
 		// for each year, update by passing in all the country objects
-		update(dataPerYear)
+		update(dataPerYear, (1800 + year).toString())
 
  	}, 100)
 	// the initial call to load the data
 	// console.log(data[year]["countries"])
-	update(data[year])
+	update(formattedData[year], "1800")
 })
 
-function update(data) {
+function update(data, year) {
 	const t = d3.transition().duration(100);
 	// updating the year text on x axis
-	yearText.text(data["year"])
+	// yearText.text(data["year"])
+	yearText.text(year.toString());
+
 	// reaching into data object to get countries list
-	data = data["countries"]
+	// data = data["countries"]
 
 	// JOIN new data with old elements
 	const circles = g.selectAll("circle")
