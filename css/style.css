@@ -1,11 +1,11 @@
+body {
+	background-image: linear-gradient(to right, rgb(215, 231, 173) , rgb(133, 138, 134));
+}
+
 #chart-area {
 	margin-left: auto;
 	margin-right: auto;
 	display: block;
-}
-
-#logo {
-	height:50px;
 }
 
 .navbar-brand {

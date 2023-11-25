@@ -6,6 +6,9 @@ const HEIGHT = 400 - MARGIN.TOP - MARGIN.BOTTOM
 // increments based on what year is retrieved from dataset
 let year = 0
 
+let interval;
+let formattedData;
+
 // retrieving svg element from html and adding margins
 const svg = d3.select("#chart-area").append("svg")
  .attr("width", WIDTH + MARGIN.LEFT + MARGIN.RIGHT)
@@ -121,7 +124,7 @@ continents.forEach((continent, i) => {
 
 // data retrieval and binding from json
 d3.json("data/data.json").then(function(data){
-	const formattedData = data.map(year => {
+	formattedData = data.map(year => {
 		return year["countries"].filter(country => {
 			const dataExists = (country.income && country.life_exp)
 			return dataExists
@@ -131,40 +134,59 @@ d3.json("data/data.json").then(function(data){
 			return country
 		})
 	})
- 	d3.interval(() => {
-		// iterating through each of the objects in the data (each is a year)
-		if(year < 214) {
-			year++
-		}
-		// once it reaches max year, reset to 0
-		else {
-			year = 0;
-		}
-		// data has an object for each year, inside that year
-		// another object for each country
-		const dataPerYear = formattedData[year]
-		// console.log("updated " + data[year]["year"])
-		// for each year, update by passing in all the country objects
-		update(dataPerYear, (1800 + year).toString())
-
- 	}, 100)
 	// the initial call to load the data
 	// console.log(data[year]["countries"])
 	update(formattedData[year], "1800")
 })
 
-function update(data, year) {
-	const t = d3.transition().duration(100);
-	// updating the year text on x axis
-	// yearText.text(data["year"])
-	yearText.text(year.toString());
+function step() {
+	year = (year < 214) ? year + 1 : 0;
+	update(formattedData[year])
+}
 
-	// reaching into data object to get countries list
-	// data = data["countries"]
+$("#play-button")
+	.on("click", function() {
+		const button = $(this)
+		if (button.text() === "Play") {
+			button.text("Pause")
+			interval = setInterval(step, 100)
+		}
+		else {
+			button.text("Play")
+			clearInterval(interval)
+		}
+	})
+
+$("#reset-button")
+	.on("click", () => {
+		year = 0
+		update(formattedData[0])
+	})
+
+$("#continent-select")
+	.on("change", () => {
+		update(formattedData[year])
+})
+
+
+function update(data) {
+	const t = d3.transition().duration(100);
+
+
+	const continent = $("#continent-select").val()
+
+	const continentChoice = data.filter( d => {
+		if(continent === "all") {
+			return true
+		}
+		else {
+			return d.continent == continent; // will evaluate to true
+		}
+	})
 
 	// JOIN new data with old elements
 	const circles = g.selectAll("circle")
-    	.data(data, (d) => {
+    	.data(continentChoice, (d) => {
 			return d["country"]
 		})
 
@@ -186,4 +208,6 @@ function update(data, year) {
       		.attr("cx", d => { return x(d["income"]) })
       		.attr("cy", d => { return y(d["life_exp"]) })
 			.attr("r", d => Math.sqrt(area(d.population) / Math.PI))
+
+	yearText.text((1800 + year).toString());
 }
