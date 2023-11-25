@@ -15,6 +15,19 @@ const svg = d3.select("#chart-area").append("svg")
 const g = svg.append("g")
  	.attr("transform", `translate(${MARGIN.LEFT}, ${MARGIN.TOP})`)
 
+// Tooltip
+const tip = d3.tip()
+  .attr('class', 'd3-tip')
+	.html(d => {
+		let text = `<strong>Country:</strong> <span style='color:red;text-transform:capitalize'>${d.country}</span><br>`
+		text += `<strong>Continent:</strong> <span style='color:red;text-transform:capitalize'>${d.continent}</span><br>`
+		text += `<strong>Life Expectancy:</strong> <span style='color:red'>${d3.format(".2f")(d.life_exp)}</span><br>`
+		text += `<strong>GDP Per Capita:</strong> <span style='color:red'>${d3.format("$,.0f")(d.income)}</span><br>`
+		text += `<strong>Population:</strong> <span style='color:red'>${d3.format(",.0f")(d.population)}</span><br>`
+		return text
+	})
+g.call(tip)
+
 // Year label on x axis
 const yearText = g.append("text")
 	.attr("x", WIDTH - MARGIN.LEFT)
@@ -82,7 +95,29 @@ const yAxisGroup = g.append("g")
 		.ticks(10)
 		.tickFormat(d => d + " years")
    yAxisGroup.call(yAxisCall)
-   
+
+
+const continents = ["europe", "asia", "americas", "africa"]
+
+const legend = g.append("g")
+	.attr("transform", `translate(${WIDTH - 10}, ${HEIGHT - 125})`)
+
+continents.forEach((continent, i) => {
+	const legendRow = legend.append("g")
+		.attr("transform", `translate(0, ${i * 20})`)
+
+	legendRow.append("rect")
+    .attr("width", 10)
+    .attr("height", 10)
+		.attr("fill", continentColor(continent))
+
+	legendRow.append("text")
+    .attr("x", -10)
+    .attr("y", 10)
+    .attr("text-anchor", "end")
+    .style("text-transform", "capitalize")
+    .text(continent)
+})
 
 // data retrieval and binding from json
 d3.json("data/data.json").then(function(data){
@@ -139,27 +174,16 @@ function update(data, year) {
 
   	// ENTER new elements present in new data...
   	circles.enter().append("circle")
-		.each(function(d,i) {
-			// removing elements with null values
-			if(d["life_exp"] == null || d["income"] == null) {
-				d3.select(this.remove())
-			}
-		})
+		// tip events are added before the MERGE because 
+		// we only want one tip event attached to each cirlce
+		.on("mouseover", tip.show)
+		.on("mouseout", tip.hide)
 		// color encoded by country
 		.attr("fill", d => continentColor(d["continent"]))
     	// AND UPDATE old elements present in new data.
     	.merge(circles)
     	.transition(t)
-      		.attr("cx", d => {
-					if(d["income"] != null && d["income"] != 0) {
-						return x(d["income"])
-					}
-				})
-      		.attr("cy", d => {
-					if(d["life_exp"] != null && d["life_exp"] != 0) {
-						return y(d["life_exp"])
-					}
-			})
-
+      		.attr("cx", d => { return x(d["income"]) })
+      		.attr("cy", d => { return y(d["life_exp"]) })
 			.attr("r", d => Math.sqrt(area(d.population) / Math.PI))
 }
